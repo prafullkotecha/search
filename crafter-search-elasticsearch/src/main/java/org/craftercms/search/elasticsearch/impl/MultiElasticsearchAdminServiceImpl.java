@@ -46,9 +46,9 @@ public class MultiElasticsearchAdminServiceImpl extends ElasticsearchAdminServic
      * {@inheritDoc}
      */
     @Override
-    public void createIndex(final String indexName, final boolean isAuthoring) throws ElasticsearchException {
+    public void createIndex(final String aliasName, final boolean isAuthoring) throws ElasticsearchException {
         for(RestHighLevelClient client : writeClients) {
-            doCreateIndex(client, indexName, isAuthoring);
+            doCreateIndexAndAlias(client, aliasName, isAuthoring);
         }
     }
 
@@ -56,9 +56,27 @@ public class MultiElasticsearchAdminServiceImpl extends ElasticsearchAdminServic
      * {@inheritDoc}
      */
     @Override
-    public void deleteIndex(final String indexName) throws ElasticsearchException {
+    public void deleteIndexes(final String aliasName) throws ElasticsearchException {
         for(RestHighLevelClient client : writeClients) {
-            doDeleteIndex(client, indexName);
+            doDeleteIndexes(client, aliasName);
+        }
+    }
+
+    @Override
+    public void recreateIndex(String aliasName, boolean isAuthoring) throws ElasticsearchException {
+        for (RestHighLevelClient client : writeClients) {
+            doRecreateIndex(client, aliasName, isAuthoring);
+        }
+    }
+
+    @Override
+    public void waitUntilReady() {
+        // wait for the read cluster to be ready
+        super.waitUntilReady();
+
+        // wait for the write clusters to be ready
+        for(RestHighLevelClient client : writeClients) {
+            doWaitUntilReady(client);
         }
     }
 
